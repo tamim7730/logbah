@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة تعليمية للأطفال</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #4caf50;
+        }
+        .quiz-section {
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 10px #ccc;
+            width: 80%;
+            max-width: 600px;
+            background-color: #fff;
+        }
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .answers {
+            list-style-type: none;
+            padding: 0;
+        }
+        .answers li {
+            margin: 10px 0;
+        }
+        .answers button {
+            font-size: 1em;
+            padding: 10px;
+            width: 100%;
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+            background-color: #e7f7e1;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .answers button:hover {
+            background-color: #4caf50;
+            color: white;
+        }
+        .feedback {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .next-btn, .back-btn {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        .next-btn {
+            display: none;
+        }
+        .back-btn {
+            background-color: #f44336;
+            display: none;
+        }
+        .results {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>لعبة الأسئلة التعليمية</h1>
+    <div class="quiz-section" id="quiz-section">
+        <div class="question" id="question">مرحبًا بك في لعبة الأسئلة التعليمية!</div>
+        <ul class="answers" id="answers">
+            <li><button onclick="startQuiz()">ابدأ اللعبة</button></li>
+        </ul>
+        <div class="feedback" id="feedback"></div>
+        <button class="back-btn" id="back-btn" onclick="previousQuestion()">السابق</button>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">التالي</button>
+    </div>
+
+    <div class="results" id="results" style="display: none;"></div>
+
+    <script>
+        // الأسئلة والأجوبة
+        const questions = [
+            // القسم الأول: الرياضيات
+            { question: "ما هو ناتج 12 + 8؟", answers: ["18", "20", "21", "22"], correct: 1 },
+            { question: "ما هو ناتج 15 - 7؟", answers: ["5", "6", "7", "8"], correct: 3 },
+            { question: "ما هو ناتج 9 × 3؟", answers: ["18", "21", "24", "27"], correct: 1 },
+
+            // القسم الثاني: العلوم
+            { question: "ما هو أكبر كوكب في المجموعة الشمسية؟", answers: ["المريخ", "الأرض", "المشتري", "الزهرة"], correct: 2 },
+            { question: "ما هو الحيوان الذي يلقب بملك الغابة؟", answers: ["الفيل", "النمر", "الأسد", "الذئب"], correct: 2 },
+
+            // القسم الثالث: اللغة
+            { question: "ما هو جمع كلمة 'كتاب'؟", answers: ["كتابات", "كتب", "كتبات", "كتابون"], correct: 1 },
+            { question: "ما هو مرادف كلمة 'سريع'؟", answers: ["بطيء", "سريع جدًا", "سريع نوعًا ما", "متسرع"], correct: 1 },
+
+            // القسم الرابع: الجغرافيا
+            { question: "ما هي أكبر قارة في العالم؟", answers: ["أفريقيا", "آسيا", "أوروبا", "أمريكا الجنوبية"], correct: 1 },
+            { question: "ما هي عاصمة فرنسا؟", answers: ["باريس", "لندن", "روما", "مدريد"], correct: 0 },
+
+            // القسم الخامس: التفكير المنطقي
+            { question: "إذا كان لديك 6 تفاحات وأعطيت 3 منها لصديقك، كم تفاحة تبقى لديك؟", answers: ["3", "4", "2", "1"], correct: 0 },
+            { question: "إذا كانت الساعة الآن تشير إلى الثالثة بعد الظهر، كم ساعة متبقية حتى منتصف الليل؟", answers: ["8 ساعات", "9 ساعات", "10 ساعات", "11 ساعة"], correct: 3 }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let history = [];
+
+        function startQuiz() {
+            document.getElementById("quiz-section").style.display = "block";
+            document.getElementById("results").style.display = "none";
+            currentQuestion = 0;
+            score = 0;
+            history = [];
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionObj = questions[currentQuestion];
+            document.getElementById("question").textContent = questionObj.question;
+            const answersUl = document.getElementById("answers");
+            answersUl.innerHTML = ""; // إزالة الإجابات القديمة
+
+            questionObj.answers.forEach((answer, index) => {
+                const li = document.createElement("li");
+                const button = document.createElement("button");
+                button.textContent = answer;
+                button.onclick = () => checkAnswer(index);
+                li.appendChild(button);
+                answersUl.appendChild(li);
+            });
+
+            document.getElementById("feedback").textContent = "";
+            document.getElementById("next-btn").style.display = "none";
+            document.getElementById("back-btn").style.display = currentQuestion > 0 ? "inline-block" : "none";
+        }
+
+        function checkAnswer(index) {
+            const questionObj = questions[currentQuestion];
+            const feedbackEl = document.getElementById("feedback");
+
+            if (index === questionObj.correct) {
+                feedbackEl.textContent = "إجابة صحيحة!";
+                feedbackEl.style.color = "green";
+                score++;
+            } else {
+                feedbackEl.textContent = "إجابة خاطئة!";
+                feedbackEl.style.color = "red";
+            }
+
+            // حفظ السؤال في التاريخ
+            history.push({ question: questionObj.question, selected: index, correct: questionObj.correct });
+
+            document.getElementById("next-btn").style.display = "block";
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById("quiz-section").style.display = "none";
+            const resultsEl = document.getElementById("results");
+            resultsEl.style.display = "block";
+            resultsEl.innerHTML = `لقد أكملت اللعبة!<br>حصلت على ${score} من ${questions.length} نقاط.`;
+
+            // تحليل الأداء
+            let performance = "";
+            if (score >= 9) {
+                performance = "أداء ممتاز!";
+            } else if (score >= 7) {
+                performance = "أداء جيد جدًا!";
+            } else if (score >= 5) {
+                performance = "أداء جيد!";
+            } else {
+                performance = "يمكنك التحسين أكثر!";
+            }
+
+            resultsEl.innerHTML += `<br>${performance}`;
+        }
+    </script>
+
+</body>
+</html>
